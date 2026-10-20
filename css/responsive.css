@@ -1,0 +1,162 @@
+@media (max-width: 1050px) {
+  .sidebar {
+    width: 215px;
+  }
+  .main-content {
+    margin-left: 215px;
+  }
+  .anime-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .collection-section {
+    padding-right: 5%;
+    padding-left: 5%;
+  }
+}
+@media (max-width: 720px) {
+  .sidebar {
+    position: static;
+    width: auto;
+    height: 57px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-right: 0;
+    border-bottom: 1px solid #303134;
+  }
+  .brand {
+    margin: 0;
+  }
+  #faq-open {
+    display: none;
+  }
+  .faq-link-mobile {
+    display: flex;
+    width: auto;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 9px;
+    font-size: 11px;
+  }
+  .sidebar > .nav-label,
+  .sidebar nav,
+  .sidebar-bottom {
+    display: none;
+  }
+  .main-content {
+    min-height: calc(100vh - 57px);
+    margin: 0;
+  }
+  .topbar {
+    height: 51px;
+    padding: 0 20px;
+  }
+  .collection-section {
+    padding: 42px 20px 18px;
+  }
+  .page-heading {
+    align-items: start;
+  }
+  .page-heading > .add-button {
+    margin-top: 25px;
+    white-space: nowrap;
+  }
+  .stats-row {
+    margin-top: 29px;
+  }
+  .stat-card {
+    min-height: 85px;
+    padding: 15px 12px;
+  }
+  .stat-label {
+    font-size: 7px;
+    letter-spacing: 0.04em;
+  }
+  .stat-card strong {
+    font-size: 18px;
+  }
+  .stat-card .latest-value {
+    font-size: 12px;
+  }
+  .list-heading {
+    margin-top: 33px;
+  }
+}
+@media (max-width: 480px) {
+  .auth-brand {
+    top: 19px;
+    left: 18px;
+  }
+  .auth-language-control {
+    top: 19px;
+    right: 18px;
+  }
+  .auth-card {
+    padding: 25px 21px;
+  }
+  .topbar-right {
+    gap: 12px;
+  }
+  .language-select {
+    max-width: 83px;
+    padding-right: 17px;
+    padding-left: 6px;
+    font-size: 9px;
+  }
+  .collection-section {
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+  h1 {
+    font-size: 30px;
+  }
+  .subtitle {
+    font-size: 11px;
+  }
+  .page-heading {
+    gap: 10px;
+  }
+  .page-heading > .add-button {
+    min-height: 35px;
+    gap: 5px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+  .stats-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat-card {
+    min-height: 78px;
+    padding: 12px;
+  }
+  .stat-card:nth-child(3) {
+    grid-column: span 2;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+  .stat-card:nth-child(3) .stat-label {
+    margin-bottom: 7px;
+  }
+  .list-heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .search-box {
+    width: 100%;
+  }
+  .anime-grid {
+    grid-template-columns: 1fr;
+  }
+  .card-art {
+    height: 145px;
+  }
+  .delete-button {
+    opacity: 1;
+  }
+  .field-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}

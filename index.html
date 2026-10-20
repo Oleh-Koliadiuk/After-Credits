@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111313" />
+    <meta
+      name="description"
+      content="A quiet place to keep track of the anime you've watched."
+      data-i18n-content="metaDescription"
+    />
+    <title>Anime Tracker — Your collection</title>
+    <link rel="icon" href="assets/favicon/favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="assets/favicon/favicon-16x16.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="assets/favicon/favicon-32x32.png"
+    />
+    <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="assets/favicon/site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/main.css" />
+    <script src="src/js/i18n.js" defer></script>
+    <script src="src/js/auth.js" defer></script>
+    <script src="src/js/anime-api.js" defer></script>
+    <script src="src/js/storage.js" defer></script>
+    <script src="src/js/collection.js" defer></script>
+    <script src="src/js/view.js" defer></script>
+    <script src="src/js/app.js" defer></script>
+  </head>
+  <body>
+    <main class="auth-screen" id="auth-screen">
+      <a
+        class="brand auth-brand"
+        href="#home"
+        aria-label="Anime Tracker home"
+        data-i18n-aria-label="brandHome"
+      >
+        <span class="brand-mark" aria-hidden="true">a</span>
+        <span>aftercredits<span class="brand-period">.</span></span>
+      </a>
+      <section class="auth-card" aria-labelledby="auth-title">
+        <div class="eyebrow">
+          <span class="eyebrow-line"></span
+          ><span data-i18n="archiveLabel">YOUR PERSONAL ARCHIVE</span>
+        </div>
+        <h1 id="auth-title">
+          <span data-i18n="auth.welcome">Welcome back</span
+          ><span class="heading-period">.</span>
+        </h1>
+        <p class="auth-description" id="auth-description">
+          <span data-i18n="auth.signInDescription"
+            >Sign in to open your anime collection.</span
+          >
+        </p>
+        <label class="language-control auth-language-control">
+          <span class="sr-only" data-i18n="languageLabel"
+            >Interface language</span
+          >
+          <select
+            class="language-select"
+            aria-label="Interface language"
+            data-i18n-aria-label="languageLabel"
+          >
+            <option value="en">English</option>
+            <option value="uk">Українська</option>
+            <option value="ru">Русский</option>
+          </select>
+        </label>
+        <form id="auth-form">
+          <label
+            class="field-label"
+            for="auth-username"
+            data-i18n="auth.username"
+            >USERNAME</label
+          >
+          <input
+            class="text-input"
+            id="auth-username"
+            name="username"
+            minlength="3"
+            maxlength="30"
+            autocomplete="username"
+            required
+          />
+          <label
+            class="field-label auth-password-label"
+            for="auth-password"
+            data-i18n="auth.password"
+            >PASSWORD</label
+          >
+          <input
+            class="text-input"
+            id="auth-password"
+            name="password"
+            type="password"
+            minlength="8"
+            autocomplete="current-password"
+            required
+          />
+          <p class="form-error" id="auth-error" role="alert"></p>
+          <button class="add-button auth-submit" id="auth-submit" type="submit">
+            <span data-i18n="auth.signIn">Sign in</span>
+            <span aria-hidden="true">↗</span>
+          </button>
+        </form>
+        <p class="auth-switch-copy">
+          <span id="auth-switch-prompt" data-i18n="auth.newHere"
+            >New here?</span
+          >
+          <button class="auth-switch" id="auth-switch" type="button">
+            <span data-i18n="auth.createLocal">Create an account</span>
+          </button>
+        </p>
+      </section>
+    </main>
+
+    <div class="app-shell" id="app-shell" hidden>
+      <aside
+        class="sidebar"
+        aria-label="Main navigation"
+        data-i18n-aria-label="mainNavigation"
+      >
+        <a
+          class="brand"
+          href="#home"
+          aria-label="Anime Tracker home"
+          data-i18n-aria-label="brandHome"
+        >
+          <span class="brand-mark" aria-hidden="true">a</span>
+          <span>aftercredits<span class="brand-period">.</span></span>
+        </a>
+        <button
+          class="faq-link faq-link-mobile"
+          id="faq-open-mobile"
+          type="button"
+        >
+          <span aria-hidden="true">?</span><span data-i18n="faq">FAQ</span>
+        </button>
+        <div class="nav-label" data-i18n="library">LIBRARY</div>
+        <nav>
+          <a class="nav-item active" href="#collection" aria-current="page">
+            <span class="nav-icon" aria-hidden="true">▤</span>
+            <span data-i18n="collection">My collection</span>
+            <span class="nav-count" id="nav-count">0</span>
+          </a>
+        </nav>
+        <button class="faq-link" id="faq-open" type="button">
+          <span aria-hidden="true">?</span><span data-i18n="faq">FAQ</span>
+        </button>
+        <div class="sidebar-bottom">
+          <div class="profile-avatar" id="profile-avatar" aria-hidden="true">
+            A
+          </div>
+          <div class="profile-copy">
+            <strong id="profile-name">Profile</strong>
+          </div>
+        </div>
+      </aside>
+
+      <main id="home" class="main-content">
+        <header class="topbar">
+          <div
+            class="breadcrumb"
+            aria-label="Breadcrumb"
+            data-i18n-aria-label="breadcrumb"
+          >
+            <span data-i18n="library">LIBRARY</span> <span>/</span>
+            <strong data-i18n="collectionUpper">MY COLLECTION</strong>
+          </div>
+          <div class="topbar-right">
+            <label class="language-control">
+              <span class="sr-only" data-i18n="languageLabel"
+                >Interface language</span
+              >
+              <select
+                class="language-select"
+                aria-label="Interface language"
+                data-i18n-aria-label="languageLabel"
+              >
+                <option value="en">English</option>
+                <option value="uk">Українська</option>
+                <option value="ru">Русский</option>
+              </select>
+            </label>
+            <button class="logout-button" id="logout-button" type="button">
+              <span data-i18n="signOut">Sign out</span>
+            </button>
+            <span class="topbar-avatar" id="topbar-avatar" aria-hidden="true"
+              >A</span
+            >
+          </div>
+        </header>
+
+        <section id="collection" class="collection-section">
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow">
+                <span class="eyebrow-line"></span
+                ><span data-i18n="archiveLabel">YOUR PERSONAL ARCHIVE</span>
+              </div>
+              <h1>
+                <span data-i18n="collection">My collection</span>
+              </h1>
+              <p class="subtitle" data-i18n="collectionSubtitle">
+                Track watched, watching, and planned anime.
+              </p>
+            </div>
+            <button class="add-button" id="open-form" type="button">
+              <span aria-hidden="true">＋</span>
+              <span data-i18n="addAnime">Add anime</span>
+            </button>
+          </div>
+
+          <div
+            class="stats-row"
+            aria-label="Collection statistics"
+            data-i18n-aria-label="collectionStats"
+          >
+            <article class="stat-card">
+              <span class="stat-label" data-i18n="completed">COMPLETED</span>
+              <div>
+                <strong id="completed-count">00</strong
+                ><span class="stat-unit" data-i18n="titles">titles</span>
+              </div>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label" data-i18n="averageRating"
+                >AVG. RATING</span
+              >
+              <div>
+                <strong id="average-rating">—</strong
+                ><span class="stat-unit">/ 10</span>
+              </div>
+            </article>
+            <article class="stat-card">
+              <span class="stat-label" data-i18n="latestAddition"
+                >LATEST ADDITION</span
+              >
+              <div>
+                <strong class="latest-value" id="latest-date">—</strong>
+              </div>
+            </article>
+          </div>
+
+          <div class="list-heading">
+            <div>
+              <h2 id="collection-list-title" data-i18n="collectionTitles">
+                All titles
+              </h2>
+              <span class="list-count" id="list-count">0 titles</span>
+            </div>
+            <label class="search-box"
+              ><span aria-hidden="true">⌕</span
+              ><input
+                id="filter-input"
+                type="search"
+                placeholder="Filter your collection"
+                aria-label="Filter your collection"
+                data-i18n-placeholder="filterPlaceholder"
+                data-i18n-aria-label="filterLabel"
+            /></label>
+          </div>
+
+          <div
+            class="status-filters"
+            role="group"
+            aria-label="Filter collection by status"
+            data-i18n-aria-label="filterByStatus"
+          >
+            <button
+              type="button"
+              class="status-filter active"
+              data-status-filter="all"
+              aria-pressed="true"
+            >
+              <span data-i18n="status.all">All</span
+              ><span class="filter-count">0</span>
+            </button>
+            <button
+              type="button"
+              class="status-filter"
+              data-status-filter="watching"
+              aria-pressed="false"
+            >
+              <span class="status-dot watching-dot" aria-hidden="true"></span
+              ><span data-i18n="status.watching">Watching</span
+              ><span class="filter-count">0</span>
+            </button>
+            <button
+              type="button"
+              class="status-filter"
+              data-status-filter="watched"
+              aria-pressed="false"
+            >
+              <span class="status-dot watched-dot" aria-hidden="true"></span
+              ><span data-i18n="status.watched">Watched</span
+              ><span class="filter-count">0</span>
+            </button>
+            <button
+              type="button"
+              class="status-filter"
+              data-status-filter="planned"
+              aria-pressed="false"
+            >
+              <span class="status-dot planned-dot" aria-hidden="true"></span
+              ><span data-i18n="status.planned">Planned</span
+              ><span class="filter-count">0</span>
+            </button>
+          </div>
+
+          <div class="anime-grid" id="anime-grid" aria-live="polite"></div>
+          <div class="empty-state" id="empty-state">
+            <div class="empty-art" aria-hidden="true">
+              <span>✳</span><i></i><b></b>
+            </div>
+            <p class="empty-kicker" id="empty-kicker" data-i18n="newChapter">
+              COLLECTION
+            </p>
+            <h3 id="empty-title" data-i18n="emptyTitle">No anime yet.</h3>
+            <p id="empty-description" data-i18n="emptyDescription">
+              Add an anime to your list.
+            </p>
+            <button class="text-button" id="empty-add" type="button">
+              <span id="empty-add-label" data-i18n="addFirstTitle"
+                >Add your first title</span
+              >
+              <span aria-hidden="true">↗</span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog
+      id="anime-dialog"
+      class="anime-dialog search-dialog"
+      aria-labelledby="dialog-title"
+    >
+      <form id="anime-form" class="search-form" method="dialog">
+        <header class="search-header">
+          <a
+            class="brand"
+            href="#home"
+            aria-label="Anime Tracker home"
+            data-i18n-aria-label="brandHome"
+          >
+            <span class="brand-mark" aria-hidden="true">a</span>
+            <span>aftercredits<span class="brand-period">.</span></span>
+          </a>
+          <span class="search-header-label" data-i18n="addToArchive"
+            >ADD TO YOUR ARCHIVE</span
+          >
+          <button
+            class="close-button"
+            id="close-form"
+            type="button"
+            aria-label="Close search"
+            data-i18n-aria-label="closeSearch"
+          >
+            ×
+          </button>
+        </header>
+        <section class="search-content">
+          <div class="search-intro">
+            <div class="eyebrow">
+              <span class="eyebrow-line"></span
+              ><span data-i18n="findNext">FIND YOUR NEXT ENTRY</span>
+            </div>
+            <h2 id="dialog-title">
+              <span data-i18n="findAnime">Find an anime</span
+              ><span class="heading-period">.</span>
+            </h2>
+            <p>
+              <span data-i18n="searchDescription"
+                >Search by title, then choose the matching poster for your
+                collection.</span
+              >
+            </p>
+          </div>
+          <div class="large-search-box">
+            <span aria-hidden="true">⌕</span>
+            <input
+              id="anime-title"
+              name="title"
+              maxlength="100"
+              placeholder="Search anime titles..."
+              data-i18n-placeholder="searchPlaceholder"
+              required
+              autocomplete="off"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded="false"
+              aria-controls="anime-suggestions"
+            />
+            <button
+              class="clear-search"
+              id="clear-search"
+              type="button"
+              aria-label="Clear search"
+              data-i18n-aria-label="clearSearch"
+              hidden
+            >
+              ×
+            </button>
+          </div>
+          <p
+            class="search-status"
+            id="search-status"
+            role="status"
+            aria-live="polite"
+          ></p>
+          <div class="search-start" id="search-start">
+            <span aria-hidden="true">✳</span>
+            <p data-i18n="searchStart">
+              Start typing to explore matching titles.
+            </p>
+          </div>
+          <div
+            class="anime-suggestions"
+            id="anime-suggestions"
+            role="listbox"
+            hidden
+          ></div>
+          <button
+            class="manual-title-button"
+            id="manual-title-button"
+            type="button"
+            hidden
+          >
+            <span data-i18n="manualTitle"
+              >Add the typed title without a poster</span
+            >
+          </button>
+        </section>
+        <footer class="selection-panel" id="selection-panel" hidden>
+          <div class="selected-title">
+            <img id="selected-poster" alt="" />
+            <div>
+              <span class="field-label" data-i18n="selectedTitle"
+                >SELECTED TITLE</span
+              ><strong id="selected-title"></strong
+              ><span id="selected-meta"></span>
+            </div>
+          </div>
+          <label class="field-group"
+            ><span class="field-label"
+              ><span data-i18n="yourRating">YOUR RATING</span>
+              <small data-i18n="optional">OPTIONAL</small></span
+            ><span class="rating-input"
+              ><input
+                name="rating"
+                type="number"
+                min="1"
+                max="10"
+                step="0.5"
+                placeholder="—"
+              /><span>/ 10</span></span
+            ></label
+          >
+          <div class="field-group">
+            <span
+              class="field-label"
+              id="calendar-field-label"
+              data-i18n="dateFinished"
+              >DATE FINISHED</span
+            >
+            <button
+              class="text-input date-input calendar-trigger"
+              id="calendar-open"
+              type="button"
+              aria-labelledby="calendar-field-label"
+              aria-describedby="date-display"
+              aria-haspopup="dialog"
+            >
+              <span id="date-display">—</span><span aria-hidden="true">▦</span>
+            </button>
+            <input id="watched-at-value" name="watchedAt" type="hidden" />
+          </div>
+          <label class="field-group status-field">
+            <span class="field-label" data-i18n="status.label">STATUS</span>
+            <select
+              class="text-input status-select"
+              id="anime-status"
+              name="status"
+            >
+              <option value="watched" data-i18n="status.watched">
+                Watched
+              </option>
+              <option value="watching" data-i18n="status.watching">
+                Watching
+              </option>
+              <option value="planned" data-i18n="status.planned">
+                Planned
+              </option>
+            </select>
+          </label>
+          <p class="form-error" id="form-error" role="alert"></p>
+          <button class="add-button" type="submit">
+            <span data-i18n="addToCollection">Add to collection</span>
+            <span aria-hidden="true">↗</span>
+          </button>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog
+      id="faq-dialog"
+      class="anime-dialog faq-dialog"
+      aria-labelledby="faq-heading"
+    >
+      <div class="dialog-top">
+        <div>
+          <div class="eyebrow">
+            <span class="eyebrow-line"></span><span data-i18n="help">HELP</span>
+          </div>
+          <h2 id="faq-heading" data-i18n="faqTitle">
+            Frequently asked questions
+          </h2>
+        </div>
+        <button
+          class="close-button"
+          type="button"
+          id="faq-close"
+          aria-label="Close FAQ"
+          data-i18n-aria-label="closeFaq"
+        >
+          ×
+        </button>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary data-i18n="faq.addQuestion">How do I add an anime?</summary>
+          <p data-i18n="faq.addAnswer">
+            Search by title, choose the matching result, then set its status.
+          </p>
+        </details>
+        <details>
+          <summary data-i18n="faq.statusQuestion">
+            What do the statuses mean?
+          </summary>
+          <p data-i18n="faq.statusAnswer">
+            Watched is complete, Watching is in progress, and Planned is for
+            your watchlist.
+          </p>
+        </details>
+        <details>
+          <summary data-i18n="faq.commentQuestion">
+            How do I add a comment?
+          </summary>
+          <p data-i18n="faq.commentAnswer">
+            Use Add comment on an anime card. You can edit it later.
+          </p>
+        </details>
+        <details>
+          <summary data-i18n="faq.searchQuestion">
+            Can I search in other languages?
+          </summary>
+          <p data-i18n="faq.searchAnswer">
+            Yes. Search using an anime title in the language you know.
+          </p>
+        </details>
+      </div>
+    </dialog>
+    <dialog
+      id="calendar-dialog"
+      class="anime-dialog calendar-dialog"
+      aria-labelledby="calendar-heading"
+    >
+      <div class="dialog-top">
+        <div>
+          <div class="eyebrow">
+            <span class="eyebrow-line"></span
+            ><span data-i18n="dateFinished">DATE FINISHED</span>
+          </div>
+          <h2 id="calendar-heading" data-i18n="chooseDate">Choose a date</h2>
+        </div>
+        <button
+          class="close-button"
+          type="button"
+          id="calendar-close"
+          aria-label="Close calendar"
+          data-i18n-aria-label="closeCalendar"
+        >
+          ×
+        </button>
+      </div>
+      <div class="calendar-controls">
+        <button
+          class="calendar-nav"
+          id="calendar-previous"
+          type="button"
+          aria-label="Previous month"
+          data-i18n-aria-label="previousMonth"
+        >
+          ‹
+        </button>
+        <strong id="calendar-month"></strong>
+        <button
+          class="calendar-nav"
+          id="calendar-next"
+          type="button"
+          aria-label="Next month"
+          data-i18n-aria-label="nextMonth"
+        >
+          ›
+        </button>
+      </div>
+      <div
+        class="calendar-weekdays"
+        id="calendar-weekdays"
+        aria-hidden="true"
+      ></div>
+      <div class="calendar-days" id="calendar-days"></div>
+      <div class="calendar-actions">
+        <button
+          class="cancel-button"
+          type="button"
+          id="calendar-clear"
+          data-i18n="clearDate"
+        >
+          Clear date
+        </button>
+        <button
+          class="cancel-button"
+          type="button"
+          id="calendar-cancel"
+          data-i18n="cancel"
+        >
+          Cancel
+        </button>
+      </div>
+    </dialog>
+    <dialog
+      id="notes-dialog"
+      class="anime-dialog notes-dialog"
+      aria-labelledby="notes-heading"
+    >
+      <form id="notes-form">
+        <div class="dialog-top">
+          <div>
+            <div class="eyebrow">
+              <span class="eyebrow-line"></span
+              ><span data-i18n="noteKicker">YOUR NOTES</span>
+            </div>
+            <h2 id="notes-heading">
+              <span data-i18n="notesFor">Notes for</span>
+              <span id="notes-anime-title"></span>
+            </h2>
+          </div>
+          <button
+            class="close-button"
+            type="button"
+            id="close-notes"
+            aria-label="Close notes"
+            data-i18n-aria-label="closeNotes"
+          >
+            ×
+          </button>
+        </div>
+        <label class="field-label" for="notes-input" data-i18n="noteLabel"
+          >COMMENT</label
+        >
+        <textarea
+          class="text-input note-editor"
+          id="notes-input"
+          maxlength="2000"
+          placeholder="Write a note about this anime..."
+          data-i18n-placeholder="notesPlaceholder"
+        ></textarea>
+        <div class="notes-actions">
+          <button
+            class="cancel-button"
+            type="button"
+            id="cancel-notes"
+            data-i18n="cancel"
+          >
+            Cancel
+          </button>
+          <button class="add-button" type="submit">
+            <span data-i18n="saveNote">Save note</span
+            ><span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
