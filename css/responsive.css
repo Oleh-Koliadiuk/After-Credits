@@ -14,6 +14,11 @@
   }
 }
 @media (max-width: 720px) {
+  .app-shell {
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow-x: clip;
+  }
   .sidebar {
     position: static;
     width: auto;
@@ -46,6 +51,7 @@
   }
   .main-content {
     min-height: calc(100vh - 57px);
+    min-height: calc(100svh - 57px);
     margin: 0;
   }
   .topbar {
@@ -53,7 +59,8 @@
     padding: 0 20px;
   }
   .collection-section {
-    padding: 42px 20px 18px;
+    width: 100%;
+    padding: 32px 20px max(24px, env(safe-area-inset-bottom));
   }
   .page-heading {
     align-items: start;
@@ -158,5 +165,96 @@
   .field-row {
     grid-template-columns: 1fr;
     gap: 14px;
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    height: auto;
+    min-height: 51px;
+    padding: 8px 16px;
+  }
+  .breadcrumb {
+    display: none;
+  }
+  .topbar-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .collection-section {
+    padding: 28px 16px max(24px, env(safe-area-inset-bottom));
+  }
+  .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .page-heading > .add-button {
+    align-self: flex-start;
+    margin: 0;
+  }
+}
+
+@media (max-width: 370px) {
+  .sidebar {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .topbar {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .collection-section {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+  .stat-card:nth-child(3) {
+    grid-column: auto;
+  }
+  .stat-card + .stat-card,
+  .stat-card:nth-child(3) {
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+}
+
+@media (hover: none) {
+  .faq-link:hover {
+    border-color: transparent;
+    background: transparent;
+    color: #c9cec7;
+  }
+  .add-button:hover {
+    transform: none;
+    background: var(--accent);
+  }
+  .status-filter:hover:not(.active) {
+    border-color: #3a3b3e;
+    background: #1e1f22;
+    color: #a6ada4;
+  }
+  .anime-card:hover {
+    transform: none;
+    border-color: var(--border);
+  }
+  .delete-button:hover {
+    color: #858b85;
+  }
+  .note-button:hover {
+    color: #cec7b8;
+  }
+  .calendar-nav:hover {
+    background: #212225;
+  }
+  .calendar-day:hover:not(.today):not(.selected) {
+    border-color: transparent;
+    background: transparent;
+  }
+  .logout-button:hover {
+    border-color: #414245;
+    color: #a7aea6;
   }
 }

@@ -331,6 +331,25 @@
   }
 }
 @media (max-width: 620px) {
+  /* Keep search, results, and the add form in one natural page scroll. */
+  .search-dialog {
+    inset: 0;
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .search-form {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: visible;
+  }
   .search-header {
     min-height: 62px;
     grid-template-columns: 1fr auto;
@@ -339,6 +358,10 @@
     display: none;
   }
   .search-content {
+    width: 100%;
+    min-height: 0;
+    flex: 0 0 auto;
+    overflow: visible;
     padding-top: 30px;
   }
   .search-intro > p {
@@ -361,9 +384,16 @@
     padding: 9px;
   }
   .selection-panel {
+    position: static;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  }
+  .anime-dialog:not(.search-dialog) {
+    max-height: calc(100svh - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
   .selected-title {
     grid-column: 1 / -1;
@@ -379,5 +409,52 @@
   .selection-panel .form-error {
     grid-column: 1 / -1;
     grid-row: auto;
+  }
+}
+
+@media (max-width: 370px) {
+  .search-header {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .search-content {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .large-search-box {
+    gap: 8px;
+    padding-right: 10px;
+    padding-left: 12px;
+  }
+  .search-content .anime-suggestions {
+    gap: 9px;
+  }
+  .selection-panel {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+  .selection-panel .selected-title,
+  .selection-panel .status-field,
+  .selection-panel .form-error,
+  .selection-panel > .add-button {
+    grid-column: 1;
+  }
+  .selection-panel .field-group {
+    min-width: 0;
+  }
+}
+
+@media (hover: none) {
+  .manual-title-button:hover {
+    border-color: #55565a;
+    background: #2d2e31;
+  }
+  .search-content .anime-suggestion:hover:not(:focus-visible),
+  .anime-suggestion:hover:not(:focus-visible) {
+    transform: none;
+    border-color: #3a3b3e;
+    background: #1c1d20;
   }
 }
