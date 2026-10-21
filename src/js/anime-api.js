@@ -6,7 +6,7 @@ window.AnimeTracker = window.AnimeTracker || {};
   const SEARCH_QUERY = `
     query SearchAnime($search: String!) {
       Page(page: 1, perPage: 24) {
-        media(search: $search, type: ANIME, sort: POPULARITY_DESC) {
+          media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
           id
           idMal
           title { romaji english native }
@@ -77,16 +77,17 @@ window.AnimeTracker = window.AnimeTracker || {};
         signal: requestController.signal,
       });
       if (!response.ok) {
-        if (response.status === 429)
-          throw new Error("Search is busy. Try again in a moment.");
-        throw new Error(
-          `The search service returned an error (${response.status}). Try again.`,
-        );
+        const error = new Error(`AniList returned ${response.status}.`);
+        error.code = response.status === 429 ? "SEARCH_BUSY" : "SEARCH_FAILED";
+        throw error;
       }
 
       const payload = await response.json();
-      if (payload.errors?.length)
-        throw new Error("Could not search anime titles. Try again.");
+      if (payload.errors?.length) {
+        const error = new Error("AniList could not search these titles.");
+        error.code = "SEARCH_FAILED";
+        throw error;
+      }
       return (payload.data?.Page?.media || []).map((anime) => ({
         id: anime.idMal || null,
         title: chooseTitle(anime, query),
@@ -100,14 +101,14 @@ window.AnimeTracker = window.AnimeTracker || {};
     } catch (error) {
       if (signal?.aborted) throw error;
       if (requestController.signal.aborted) {
-        throw new Error(
-          "Search took too long. Check your connection and try again.",
-        );
+        const timeoutError = new Error("AniList search timed out.");
+        timeoutError.code = "SEARCH_TIMEOUT";
+        throw timeoutError;
       }
       if (error instanceof TypeError) {
-        throw new Error(
-          "Couldn’t load titles. Check your connection and try again.",
-        );
+        const networkError = new Error("AniList could not be reached.");
+        networkError.code = "SEARCH_FAILED";
+        throw networkError;
       }
       throw error;
     } finally {

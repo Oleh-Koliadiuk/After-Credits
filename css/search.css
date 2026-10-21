@@ -243,6 +243,9 @@
   background: #1b1c1f;
   transition: transform 0.18s ease;
 }
+.selection-panel.without-completion-fields {
+  grid-template-columns: minmax(190px, 1fr) 155px minmax(100px, 0.7fr) auto;
+}
 .selected-title {
   display: flex;
   min-width: 0;
@@ -304,6 +307,9 @@
     grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
+  .selection-panel.without-completion-fields {
+    grid-template-columns: 1fr 1fr;
+  }
   .selection-panel .selected-title,
   .selection-panel .status-field,
   .selection-panel .form-error,
@@ -317,6 +323,9 @@
   .selection-panel {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+  }
+  .selection-panel.without-completion-fields {
+    grid-template-columns: 1fr 1fr;
   }
   .selection-panel .selected-title,
   .selection-panel .status-field,
@@ -389,6 +398,9 @@
     gap: 12px;
     padding: 12px 16px max(12px, env(safe-area-inset-bottom));
   }
+  .selection-panel.without-completion-fields {
+    grid-template-columns: 1fr 1fr;
+  }
   .anime-dialog:not(.search-dialog) {
     max-height: calc(100svh - 32px);
     overflow-y: auto;
@@ -434,6 +446,9 @@
     gap: 14px;
     padding-right: 14px;
     padding-left: 14px;
+  }
+  .selection-panel.without-completion-fields {
+    grid-template-columns: 1fr;
   }
   .selection-panel .selected-title,
   .selection-panel .status-field,

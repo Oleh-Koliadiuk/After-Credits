@@ -11,6 +11,9 @@
   const authDescription = document.querySelector("#auth-description");
   const authSwitchPrompt = document.querySelector("#auth-switch-prompt");
   const authPassword = document.querySelector("#auth-password");
+  const animeStatus = document.querySelector("#anime-status");
+  const ratingField = document.querySelector("#rating-field");
+  const watchedDateField = document.querySelector("#watched-date-field");
   let isRegistering = false;
   let activeUser = "";
   let animeList = [];
@@ -21,10 +24,21 @@
   let searchTimer = 0;
   let searchController = null;
   let searchMessage = { key: "", values: {} };
+  let collectionError = "";
 
   function setSearchStatus(key, values = {}) {
     searchMessage = { key, values };
     view.setSearchStatus(key ? i18n.t(key, values) : "");
+  }
+
+  function updateCompletionFields() {
+    const isWatched = animeStatus.value === "watched";
+    ratingField.hidden = !isWatched;
+    watchedDateField.hidden = !isWatched;
+    document
+      .querySelector("#selection-panel")
+      .classList.toggle("without-completion-fields", !isWatched);
+    if (!isWatched) document.querySelector("#form-error").textContent = "";
   }
 
   function updateAuthMode() {
@@ -53,9 +67,10 @@
     authScreen.hidden = false;
   }
 
-  function startApplication(username) {
+  async function startApplication(username) {
     activeUser = username;
-    animeList = storage.load(activeUser);
+    animeList = await storage.load();
+    collectionError = "";
     document.querySelector("#profile-name").textContent = activeUser;
     const initial = Array.from(username.trim())[0]?.toLocaleUpperCase() || "?";
     document.querySelector("#profile-avatar").textContent = initial;
@@ -87,15 +102,18 @@
             String(data.get("username") || ""),
             String(data.get("password") || ""),
           );
-      startApplication(username);
+      await startApplication(username);
     } catch (error) {
-      authError.textContent = error.message || i18n.t("auth.err.storage");
+      authError.textContent = error.message || i18n.t("auth.err.connection");
     } finally {
       authSubmit.disabled = false;
     }
   });
 
   function render() {
+    const collectionErrorElement = document.querySelector("#collection-error");
+    collectionErrorElement.textContent = collectionError;
+    collectionErrorElement.hidden = !collectionError;
     view.render(
       animeList,
       document.querySelector("#filter-input").value,
@@ -106,15 +124,25 @@
     );
   }
 
-  function removeAnime(id) {
-    animeList = collection.remove(animeList, id);
-    storage.save(activeUser, animeList);
+  async function removeAnime(id) {
+    try {
+      await storage.remove(id);
+      animeList = collection.remove(animeList, id);
+      collectionError = "";
+    } catch (error) {
+      collectionError = error.message;
+    }
     render();
   }
 
-  function changeStatus(id, status) {
-    animeList = collection.updateStatus(animeList, id, status);
-    storage.save(activeUser, animeList);
+  async function changeStatus(id, status) {
+    try {
+      await storage.update(id, { status });
+      animeList = collection.updateStatus(animeList, id, status);
+      collectionError = "";
+    } catch (error) {
+      collectionError = error.message;
+    }
     render();
   }
 
@@ -122,6 +150,7 @@
     editingNoteId = item.id;
     document.querySelector("#notes-anime-title").textContent = item.title;
     document.querySelector("#notes-input").value = item.notes || "";
+    document.querySelector("#notes-error").textContent = "";
     document.querySelector("#notes-dialog").showModal();
     document.querySelector("#notes-input").focus();
   }
@@ -141,9 +170,14 @@
   }
 
   function selectAnime(anime) {
+    window.clearTimeout(searchTimer);
+    if (searchController) searchController.abort();
+    searchController = null;
+    closeSuggestions();
     selectedAnime = anime;
     document.querySelector("#form-error").textContent = "";
     document.querySelector("#manual-title-button").hidden = true;
+    document.querySelector("#search-start").hidden = true;
     document.querySelector("#anime-title").value = anime.title;
     document.querySelector("#selected-title").textContent = anime.title;
     document.querySelector("#selected-meta").textContent =
@@ -194,12 +228,19 @@
         if (error.name === "AbortError") return;
         view.renderSuggestions([], selectAnime);
         document.querySelector("#manual-title-button").hidden = false;
-        setSearchStatus("searchUnavailable");
+        const errorKey =
+          error.code === "SEARCH_TIMEOUT"
+            ? "searchSlow"
+            : error.code === "SEARCH_BUSY"
+              ? "searchBusy"
+              : "searchError";
+        setSearchStatus(errorKey);
       });
   }
 
   function openDialog() {
     document.querySelector("#anime-form").reset();
+    updateCompletionFields();
     updateDateDisplay();
     document.querySelector("#form-error").textContent = "";
     setSearchStatus("");
@@ -216,16 +257,18 @@
   }
 
   document.querySelector("#logout-button").addEventListener("click", () => {
-    auth.logout();
-    activeUser = "";
-    animeList = [];
-    showAuth();
-    document.querySelector("#auth-form").reset();
-    document.querySelector("#auth-error").textContent = "";
+    auth.logout().finally(() => {
+      activeUser = "";
+      animeList = [];
+      showAuth();
+      document.querySelector("#auth-form").reset();
+      document.querySelector("#auth-error").textContent = "";
+    });
   });
 
   document.querySelector("#open-form").addEventListener("click", openDialog);
   document.querySelector("#empty-add").addEventListener("click", openDialog);
+  animeStatus.addEventListener("change", updateCompletionFields);
   document.querySelectorAll("#faq-open, #faq-open-mobile").forEach((button) => {
     button.addEventListener("click", () =>
       document.querySelector("#faq-dialog").showModal(),
@@ -253,17 +296,19 @@
     });
   });
 
-  document.querySelector("#notes-form").addEventListener("submit", (event) => {
+  document.querySelector("#notes-form").addEventListener("submit", async (event) => {
     event.preventDefault();
-    animeList = collection.updateNotes(
-      animeList,
-      editingNoteId,
-      document.querySelector("#notes-input").value,
-    );
-    storage.save(activeUser, animeList);
-    document.querySelector("#notes-dialog").close();
-    editingNoteId = null;
-    render();
+    const notes = document.querySelector("#notes-input").value;
+    try {
+      await storage.update(editingNoteId, { notes });
+      animeList = collection.updateNotes(animeList, editingNoteId, notes);
+      collectionError = "";
+      document.querySelector("#notes-dialog").close();
+      editingNoteId = null;
+      render();
+    } catch (error) {
+      document.querySelector("#notes-error").textContent = error.message;
+    }
   });
   document
     .querySelector("#close-notes")
@@ -477,21 +522,26 @@
       });
     });
 
-  document.querySelector("#anime-form").addEventListener("submit", (event) => {
+  document.querySelector("#anime-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     try {
       if (!selectedAnime) throw new Error(i18n.t("chooseAnime"));
-      if (!validateRating()) throw new Error(i18n.t("ratingError"));
-      animeList = collection.add(animeList, {
+      const status = String(data.get("status") || "watched");
+      if (status === "watched" && !validateRating())
+        throw new Error(i18n.t("ratingError"));
+      const [entry] = collection.add(animeList, {
         title: selectedAnime.title,
-        rating: String(data.get("rating") || "").trim(),
-        watchedAt: String(data.get("watchedAt") || ""),
+        rating:
+          status === "watched" ? String(data.get("rating") || "").trim() : "",
+        watchedAt: status === "watched" ? String(data.get("watchedAt") || "") : "",
         malId: selectedAnime?.id,
         imageUrl: selectedAnime?.imageUrl,
-        status: String(data.get("status") || "watched"),
+        status,
       });
-      storage.save(activeUser, animeList);
+      const savedEntry = await storage.add(entry);
+      animeList = [savedEntry, ...animeList];
+      collectionError = "";
       document.querySelector("#filter-input").value = "";
       statusFilter = "all";
       render();
@@ -501,8 +551,17 @@
     }
   });
 
-  const existingUser = auth.currentUser();
   updateAuthMode();
-  if (existingUser) startApplication(existingUser);
-  else showAuth();
+  auth
+    .currentUser()
+    .then((existingUser) => {
+      if (existingUser) return startApplication(existingUser);
+      document.querySelector("#auth-username").value =
+        auth.suggestedUsername();
+      showAuth();
+    })
+    .catch((error) => {
+      authError.textContent = error.message || i18n.t("auth.err.connection");
+      showAuth();
+    });
 })();

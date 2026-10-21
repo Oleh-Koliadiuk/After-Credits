@@ -1,12 +1,13 @@
 window.AnimeTracker = window.AnimeTracker || {};
 
 (() => {
-  const i18n = window.AnimeTracker.i18n;
+  const { api, i18n } = window.AnimeTracker;
   const ACCOUNTS_KEY = "aftercredits.accounts.v1";
-  const SESSION_KEY = "aftercredits.session.v1";
+  const LEGACY_SESSION_KEY = "aftercredits.session.v1";
+  const LEGACY_ANIME_KEY = "aftercredits.anime.v1";
   const ITERATIONS = 210_000;
 
-  function readAccounts() {
+  function readLegacyAccounts() {
     try {
       const value = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || "{}");
       return value && typeof value === "object" && !Array.isArray(value)
@@ -15,10 +16,6 @@ window.AnimeTracker = window.AnimeTracker || {};
     } catch {
       return {};
     }
-  }
-
-  function toBase64(bytes) {
-    return btoa(String.fromCharCode(...new Uint8Array(bytes)));
   }
 
   function fromBase64(value) {
@@ -38,46 +35,160 @@ window.AnimeTracker = window.AnimeTracker || {};
       material,
       256,
     );
-    return toBase64(bits);
+    return btoa(String.fromCharCode(...new Uint8Array(bits)));
+  }
+
+  async function readMatchingLegacyAccount(username, password) {
+    const normalized = username.trim().toLocaleLowerCase();
+    const account = readLegacyAccounts()[normalized];
+    if (!account?.salt || !account?.passwordHash) return null;
+    try {
+      const candidate = await derive(password, fromBase64(account.salt));
+      if (candidate !== account.passwordHash) return null;
+      return { normalized, username: account.username || username.trim() };
+    } catch {
+      return null;
+    }
+  }
+
+  function readLegacyAnime(normalized) {
+    try {
+      const items = JSON.parse(
+        localStorage.getItem(`${LEGACY_ANIME_KEY}:${normalized}`) || "[]",
+      );
+      return Array.isArray(items) ? items : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async function migrateLegacyCollection(legacy) {
+    if (!legacy) return;
+    const items = readLegacyAnime(legacy.normalized);
+    if (items.length) {
+      await api.request("/collection/import", {
+        method: "POST",
+        body: { items },
+      });
+    }
+    localStorage.removeItem(`${LEGACY_ANIME_KEY}:${legacy.normalized}`);
+    const accounts = readLegacyAccounts();
+    delete accounts[legacy.normalized];
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+    if (
+      localStorage.getItem(LEGACY_SESSION_KEY) === legacy.normalized
+    ) {
+      localStorage.removeItem(LEGACY_SESSION_KEY);
+    }
+  }
+
+  function localizedError(error) {
+    const keys = {
+      INVALID_USERNAME: "auth.err.username",
+      INVALID_INPUT: "auth.err.input",
+      PASSWORD_TOO_SHORT: "auth.err.passwordLength",
+      USERNAME_TAKEN: "auth.err.exists",
+      AUTH_INVALID: "auth.err.password",
+      API_UNAVAILABLE: "auth.err.connection",
+      IMPORT_CONFLICT: "auth.err.migration",
+    };
+    return new Error(i18n.t(keys[error.code] || "auth.err.connection"));
   }
 
   async function register(username, password) {
-    const normalized = username.trim().toLocaleLowerCase();
-    if (!/^[a-z0-9_.-]{3,30}$/.test(normalized))
-      throw new Error(i18n.t("auth.err.username"));
-    if (password.length < 8) throw new Error(i18n.t("auth.err.passwordLength"));
-    const accounts = readAccounts();
-    if (accounts[normalized]) throw new Error(i18n.t("auth.err.exists"));
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    accounts[normalized] = {
-      username: username.trim(),
-      salt: toBase64(salt),
-      passwordHash: await derive(password, salt),
-    };
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    localStorage.setItem(SESSION_KEY, normalized);
-    return accounts[normalized].username;
+    try {
+      const response = await api.request("/auth/register", {
+        method: "POST",
+        auth: false,
+        body: { username, password },
+      });
+      api.setToken(response.access_token);
+      const legacy = await readMatchingLegacyAccount(username, password);
+      try {
+        await migrateLegacyCollection(legacy);
+      } catch (error) {
+        api.clearToken();
+        throw error;
+      }
+      return response.username;
+    } catch (error) {
+      throw localizedError(error);
+    }
   }
 
   async function login(username, password) {
-    const normalized = username.trim().toLocaleLowerCase();
-    const account = readAccounts()[normalized];
-    if (!account) throw new Error(i18n.t("auth.err.missing"));
-    const candidate = await derive(password, fromBase64(account.salt));
-    if (candidate !== account.passwordHash)
-      throw new Error(i18n.t("auth.err.password"));
-    localStorage.setItem(SESSION_KEY, normalized);
-    return account.username;
+    try {
+      const response = await api.request("/auth/login", {
+        method: "POST",
+        auth: false,
+        body: { username, password },
+      });
+      api.setToken(response.access_token);
+      const legacy = await readMatchingLegacyAccount(username, password);
+      try {
+        await migrateLegacyCollection(legacy);
+      } catch (migrationError) {
+        api.clearToken();
+        throw migrationError;
+      }
+      return response.username;
+    } catch (error) {
+      if (error.status === 401) {
+        const legacy = await readMatchingLegacyAccount(username, password);
+        if (legacy) {
+          try {
+            const response = await api.request("/auth/register", {
+              method: "POST",
+              auth: false,
+              body: { username: legacy.username, password },
+            });
+            api.setToken(response.access_token);
+            await migrateLegacyCollection(legacy);
+            return response.username;
+          } catch (migrationError) {
+            if (migrationError.code === "USERNAME_TAKEN") {
+              throw new Error(i18n.t("auth.err.password"));
+            }
+            throw localizedError(migrationError);
+          }
+        }
+      }
+      throw localizedError(error);
+    }
   }
 
-  function currentUser() {
-    const normalized = localStorage.getItem(SESSION_KEY);
-    return normalized ? readAccounts()[normalized]?.username || "" : "";
+  async function currentUser() {
+    if (!sessionStorage.getItem("aftercredits.api.session.v1")) return "";
+    try {
+      const response = await api.request("/auth/me");
+      return response.username;
+    } catch (error) {
+      if (error.status === 401) api.clearToken();
+      if (error.code === "API_UNAVAILABLE") throw localizedError(error);
+      return "";
+    }
   }
 
-  function logout() {
-    localStorage.removeItem(SESSION_KEY);
+  function suggestedUsername() {
+    const normalized = localStorage.getItem(LEGACY_SESSION_KEY);
+    return normalized ? readLegacyAccounts()[normalized]?.username || normalized : "";
   }
 
-  window.AnimeTracker.auth = { register, login, currentUser, logout };
+  async function logout() {
+    try {
+      await api.request("/auth/logout", { method: "POST" });
+    } catch {
+      // The local token is still cleared when the server cannot be reached.
+    } finally {
+      api.clearToken();
+    }
+  }
+
+  window.AnimeTracker.auth = {
+    register,
+    login,
+    currentUser,
+    suggestedUsername,
+    logout,
+  };
 })();

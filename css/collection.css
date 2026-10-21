@@ -209,6 +209,12 @@ h2 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 13px;
 }
+.collection-error {
+  margin: 0 0 12px;
+  color: #efa092;
+  font-size: 11px;
+  line-height: 1.5;
+}
 .anime-card {
   overflow: hidden;
   border: 1px solid var(--border);

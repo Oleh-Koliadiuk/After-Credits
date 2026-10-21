@@ -1,39 +1,48 @@
 window.AnimeTracker = window.AnimeTracker || {};
 
 (() => {
-  const STORAGE_KEY = "aftercredits.anime.v1";
+  const { api, i18n } = window.AnimeTracker;
 
-  function keyFor(username) {
-    return `${STORAGE_KEY}:${username.toLocaleLowerCase()}`;
+  function localizedError(error) {
+    if (error.status === 401) {
+      api.clearToken();
+      return new Error(i18n.t("collection.err.session"));
+    }
+    const key =
+      error.code === "DUPLICATE_TITLE"
+        ? "duplicate"
+        : "collection.err.connection";
+    return new Error(i18n.t(key));
   }
 
-  function load(username) {
+  async function request(path, options) {
     try {
-      const saved = JSON.parse(localStorage.getItem(keyFor(username)) || "[]");
-      return Array.isArray(saved)
-        ? saved
-            .filter(
-              (item) =>
-                item &&
-                typeof item.id === "string" &&
-                typeof item.title === "string",
-            )
-            .map((item) => ({
-              ...item,
-              status: ["watched", "watching", "planned"].includes(item.status)
-                ? item.status
-                : "watched",
-              notes: typeof item.notes === "string" ? item.notes : "",
-            }))
-        : [];
-    } catch {
-      return [];
+      return await api.request(path, options);
+    } catch (error) {
+      throw localizedError(error);
     }
   }
 
-  function save(username, items) {
-    localStorage.setItem(keyFor(username), JSON.stringify(items));
+  function load() {
+    return request("/collection");
   }
 
-  window.AnimeTracker.storage = { load, save };
+  function add(item) {
+    return request("/collection", { method: "POST", body: item });
+  }
+
+  function update(id, changes) {
+    return request(`/collection/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: changes,
+    });
+  }
+
+  function remove(id) {
+    return request(`/collection/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+  }
+
+  window.AnimeTracker.storage = { load, add, update, remove };
 })();

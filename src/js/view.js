@@ -34,15 +34,20 @@ window.AnimeTracker = window.AnimeTracker || {};
     details.className = "card-details";
     const meta = document.createElement("div");
     meta.className = "card-meta";
-    const finished = document.createElement("span");
-    finished.textContent = formatDate(item.watchedAt);
-    meta.append(finished);
-    if (item.rating) {
-      const rating = document.createElement("span");
-      rating.className = "card-rating";
-      rating.textContent = `★ ${Number(item.rating).toFixed(1)}`;
-      meta.append(rating);
+    if (item.status === "watched") {
+      if (item.watchedAt) {
+        const finished = document.createElement("span");
+        finished.textContent = formatDate(item.watchedAt);
+        meta.append(finished);
+      }
+      if (item.rating) {
+        const rating = document.createElement("span");
+        rating.className = "card-rating";
+        rating.textContent = `★ ${Number(item.rating).toFixed(1)}`;
+        meta.append(rating);
+      }
     }
+    meta.hidden = meta.childElementCount === 0;
 
     const title = document.createElement("h3");
     title.textContent = item.title;
