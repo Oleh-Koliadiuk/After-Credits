@@ -10,7 +10,8 @@
   flex-direction: column;
   padding: 31px 19px 21px;
   border-right: 1px solid var(--border);
-  background: #16181e;
+  background: linear-gradient(180deg, #120d0e 0%, #0c0909 100%);
+  box-shadow: 18px 0 34px rgba(0, 0, 0, 0.32);
 }
 .brand {
   display: flex;
@@ -29,10 +30,11 @@
   height: 28px;
   place-items: center;
   border-radius: 9px 9px 9px 3px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent-hover), var(--accent-dark));
   color: #1a0808;
   font-size: 21px;
   font-weight: 700;
+  box-shadow: 0 10px 22px rgba(255, 77, 77, 0.38);
 }
 .brand-period,
 .heading-period {
@@ -77,10 +79,10 @@
   transform: translateX(2px);
 }
 .nav-item.active {
-  border-color: rgba(248, 113, 113, 0.4);
-  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(255, 107, 107, 0.42);
+  background: rgba(255, 77, 77, 0.12);
   color: #ffffff;
-  box-shadow: 0 2px 14px rgba(248, 113, 113, 0.15);
+  box-shadow: 0 10px 28px rgba(255, 77, 77, 0.18);
 }
 .nav-icon {
   position: relative;
@@ -215,7 +217,9 @@
   justify-content: space-between;
   padding: 0 6.3%;
   border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  background: rgba(9, 9, 9, 0.85);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 .breadcrumb {
   color: var(--quiet);

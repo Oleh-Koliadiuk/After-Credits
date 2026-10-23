@@ -1,11 +1,15 @@
 .anime-dialog {
   width: min(460px, calc(100% - 32px));
   padding: 25px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: #181011;
+  border: 1px solid rgba(255, 107, 107, 0.22);
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 14, 15, 0.98),
+    rgba(9, 8, 9, 0.98)
+  );
   color: var(--text);
-  box-shadow: 0 20px 80px #0009;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.62);
 }
 .anime-dialog::backdrop {
   background: #0a0606d0;
@@ -96,16 +100,17 @@
 .calendar-nav {
   width: 40px;
   height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #251315;
+  border: 1px solid rgba(255, 107, 107, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 77, 77, 0.06);
   color: var(--text);
   cursor: pointer;
   font-size: 22px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14);
   transition: background 150ms;
 }
 .calendar-nav:hover {
-  background: #381a1d;
+  background: rgba(255, 77, 77, 0.12);
 }
 .calendar-weekdays,
 .calendar-days {
