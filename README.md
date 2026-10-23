@@ -5,6 +5,7 @@ A personal anime archive for tracking what you have watched, what you are watchi
 ## Features
 
 - Create an account and access the same profile from different devices.
+- Update your username and profile avatar from the account page.
 - Keep account credentials and anime collections on the API server instead of the browser.
 - Search AniList for anime titles, posters, release year, format, episode count, and score.
 - Search with English, romanized, native, and catalog synonym titles where available.
@@ -27,7 +28,8 @@ A personal anime archive for tracking what you have watched, what you are watchi
 │   │   │   └── collection.py    # Anime collection API
 │   │   ├── core/
 │   │   │   ├── database.py      # SQLite/PostgreSQL connection and sessions
-│   │   │   └── security.py      # Password hashing and session tokens
+│   │   │   ├── security.py      # Password hashing and session tokens
+│   │   │   └── rate_limit.py    # Per-IP API request limits and temporary blocks
 │   │   ├── main.py              # FastAPI app, CORS, startup
 │   │   ├── models.py            # User, session, and anime database models
 │   │   ├── schemas.py           # Request validation
@@ -42,7 +44,8 @@ A personal anime archive for tracking what you have watched, what you are watchi
 │   ├── auth.css                 # Sign-in and account creation
 │   ├── motion.css               # Animations and reduced-motion support
 │   ├── responsive.css           # Collection layout breakpoints
-│   └── search.css               # Full-screen search and add form
+│   ├── search.css               # Full-screen search and add form
+│   └── profile.css              # Account profile and avatar controls
 ├── src/js/
 │   ├── config.js                # Frontend API URL
 │   ├── api.js                   # HTTP client and session token
@@ -53,9 +56,12 @@ A personal anime archive for tracking what you have watched, what you are watchi
 │   ├── i18n.js                  # Translations and saved language preference
 │   ├── view.js                  # DOM rendering
 │   └── app.js                   # UI events and application coordination
+├── .editorconfig
+├── .gitignore
 ├── index.html
 ├── LICENSE
 └── README.md
+
 ```
 
 ## Run locally
@@ -78,23 +84,26 @@ python3 -m http.server 8000
 
 Open [http://localhost:8000](http://localhost:8000). The API is available at [http://127.0.0.1:8001/api](http://127.0.0.1:8001/api), and its interactive endpoint documentation is at [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs).
 
-The API creates `backend/data/aftercredits.db` on its first start. This SQLite database is intended for local development.
+The API creates `backend/data/aftercredits.db` on its first start. This SQLite database is intended for local development. The account page stores an optional email address, a resized JPEG avatar, and the join date with the user record. Existing databases are upgraded at API startup; the existing account with ID 2 is dated October 20, 2026.
 
 ## API overview
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/auth/register` | Create an account and start a session |
-| `POST` | `/api/auth/login` | Sign in and start a session |
-| `POST` | `/api/auth/logout` | Revoke the active session |
-| `GET` | `/api/auth/me` | Return the signed-in username |
-| `GET` | `/api/collection` | Load the current user's anime |
-| `POST` | `/api/collection` | Add an anime |
-| `PATCH` | `/api/collection/{id}` | Update rating, date, status, or note |
-| `DELETE` | `/api/collection/{id}` | Remove an anime |
-| `POST` | `/api/collection/import` | Import the previous browser-stored collection |
+| Method   | Endpoint                 | Purpose                                       |
+| -------- | ------------------------ | --------------------------------------------- |
+| `POST`   | `/api/auth/register`     | Create an account and start a session         |
+| `POST`   | `/api/auth/login`        | Sign in and start a session                   |
+| `POST`   | `/api/auth/logout`       | Revoke the active session                     |
+| `GET`    | `/api/auth/me`           | Return account profile and collection count   |
+| `PATCH`  | `/api/auth/profile`      | Update username, email, and avatar            |
+| `GET`    | `/api/collection`        | Load the current user's anime                 |
+| `POST`   | `/api/collection`        | Add an anime                                  |
+| `PATCH`  | `/api/collection/{id}`   | Update rating, date, status, or note          |
+| `DELETE` | `/api/collection/{id}`   | Remove an anime                               |
+| `POST`   | `/api/collection/import` | Import the previous browser-stored collection |
 
 Collection routes require a bearer session token. Tokens are random, expire after 30 days by default, and are stored hashed in the database. The browser keeps the active token in `sessionStorage` for the current tab session.
+
+The API applies per-process IP limits: 120 API requests per minute triggers a 10-minute block; sign-in and registration allow 10 requests per five minutes before a 15-minute block. Configure the environment variables documented in `backend/.env.example` to change these limits. This helps with basic scripted abuse and credential guessing, but it is not a complete DoS defense: the counters reset on restart and are not shared by multiple workers. Before public deployment, put the API behind a trusted reverse proxy or WAF with network-level protection and use a shared rate-limit store such as Redis across workers. Do not trust client-supplied `X-Forwarded-For` headers; configure proxy trust only for the actual hosting proxy.
 
 ## Deploying the frontend and API
 

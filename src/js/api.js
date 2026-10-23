@@ -2,17 +2,17 @@ window.AnimeTracker = window.AnimeTracker || {};
 
 (() => {
   const TOKEN_KEY = "aftercredits.api.session.v1";
-  const baseUrl = String(window.AnimeTrackerConfig.apiBaseUrl || "/api").replace(
-    /\/$/,
-    "",
-  );
+  const baseUrl = String(
+    window.AnimeTrackerConfig.apiBaseUrl || "/api",
+  ).replace(/\/$/, "");
 
   class ApiError extends Error {
-    constructor(code, status) {
+    constructor(code, status, remainingAttempts = null) {
       super(code || "API_ERROR");
       this.name = "ApiError";
       this.code = code || "API_ERROR";
       this.status = status;
+      this.remainingAttempts = remainingAttempts;
     }
   }
 
@@ -49,7 +49,16 @@ window.AnimeTracker = window.AnimeTracker || {};
           : response.status === 422
             ? "INVALID_INPUT"
             : detail;
-      throw new ApiError(code || "API_ERROR", response.status);
+      const remainingHeader = response.headers.get("X-RateLimit-Remaining");
+      const remainingAttempts =
+        remainingHeader !== null && Number.isInteger(Number(remainingHeader))
+          ? Number(remainingHeader)
+          : null;
+      throw new ApiError(
+        code || "API_ERROR",
+        response.status,
+        remainingAttempts,
+      );
     }
     return payload;
   }

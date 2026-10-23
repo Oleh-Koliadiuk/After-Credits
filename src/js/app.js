@@ -7,15 +7,24 @@
   const authError = document.querySelector("#auth-error");
   const authSubmit = document.querySelector("#auth-submit");
   const authSwitch = document.querySelector("#auth-switch");
+  const authBannerImage = document.querySelector("#auth-banner-image");
   const authTitle = document.querySelector("#auth-title");
   const authDescription = document.querySelector("#auth-description");
   const authSwitchPrompt = document.querySelector("#auth-switch-prompt");
   const authPassword = document.querySelector("#auth-password");
+  const authEmail = document.querySelector("#auth-email");
+  const authPasswordConfirm = document.querySelector("#auth-password-confirm");
+  const passwordToggle = document.querySelector("#password-toggle");
+  const passwordConfirmToggle = document.querySelector(
+    "#password-confirm-toggle",
+  );
   const animeStatus = document.querySelector("#anime-status");
   const ratingField = document.querySelector("#rating-field");
   const watchedDateField = document.querySelector("#watched-date-field");
   let isRegistering = false;
   let activeUser = "";
+  let profileData = null;
+  let avatarDraft = null;
   let animeList = [];
   let selectedAnime = null;
   let statusFilter = "all";
@@ -25,6 +34,27 @@
   let searchController = null;
   let searchMessage = { key: "", values: {} };
   let collectionError = "";
+
+  function loadAuthArtwork() {
+    if (!authBannerImage || authBannerImage.dataset.loaded === "true") return;
+    animeApi
+      .featured()
+      .then((titles) => {
+        const background = titles.find((title) => title.imageUrl)?.imageUrl;
+        if (!background) return;
+        authBannerImage.addEventListener(
+          "error",
+          () => {
+            authBannerImage.hidden = true;
+          },
+          { once: true },
+        );
+        authBannerImage.src = background;
+        authBannerImage.hidden = false;
+        authBannerImage.dataset.loaded = "true";
+      })
+      .catch(() => {});
+  }
 
   function setSearchStatus(key, values = {}) {
     searchMessage = { key, values };
@@ -60,48 +90,171 @@
     authPassword.autocomplete = isRegistering
       ? "new-password"
       : "current-password";
+    document.querySelector("#auth-email-field").hidden = !isRegistering;
+    document.querySelector("#auth-password-confirm-field").hidden =
+      !isRegistering;
+    authEmail.disabled = !isRegistering;
+    authEmail.required = isRegistering;
+    authPasswordConfirm.disabled = !isRegistering;
+    authPasswordConfirm.required = isRegistering;
+    updatePasswordToggleLabel();
+  }
+
+  function updatePasswordToggleLabel() {
+    if (passwordToggle) {
+      const visible = authPassword.type === "text";
+      const key = visible ? "auth.hidePassword" : "auth.showPassword";
+      passwordToggle.classList.toggle("is-visible", visible);
+      passwordToggle.setAttribute("aria-pressed", String(visible));
+      passwordToggle.setAttribute("aria-label", i18n.t(key));
+      passwordToggle.title = i18n.t(key);
+    }
+    if (passwordConfirmToggle) {
+      const visible = authPasswordConfirm.type === "text";
+      const key = visible ? "auth.hidePassword" : "auth.showPassword";
+      passwordConfirmToggle.classList.toggle("is-visible", visible);
+      passwordConfirmToggle.setAttribute("aria-pressed", String(visible));
+      passwordConfirmToggle.setAttribute("aria-label", i18n.t(key));
+      passwordConfirmToggle.title = i18n.t(key);
+    }
   }
 
   function showAuth() {
     appShell.hidden = true;
     authScreen.hidden = false;
+    loadAuthArtwork();
   }
 
   async function startApplication(username) {
     activeUser = username;
     animeList = await storage.load();
+    profileData = await auth.getProfile();
+    avatarDraft = profileData.avatarData;
     collectionError = "";
     document.querySelector("#profile-name").textContent = activeUser;
-    const initial = Array.from(username.trim())[0]?.toLocaleUpperCase() || "?";
-    document.querySelector("#profile-avatar").textContent = initial;
-    document.querySelector("#topbar-avatar").textContent = initial;
+    renderProfile({ syncFields: true });
+    showSection("collection");
     authScreen.hidden = true;
     appShell.hidden = false;
     render();
+  }
+
+  function setAvatar(element, username, imageData) {
+    const initial =
+      Array.from((username || "?").trim())[0]?.toLocaleUpperCase() || "?";
+    element.textContent = imageData ? "" : initial;
+    element.style.backgroundImage = imageData ? `url("${imageData}")` : "";
+    element.setAttribute("aria-label", username || "?");
+  }
+
+  function renderProfile({ syncFields = false } = {}) {
+    if (!profileData) return;
+    const username = profileData.username || activeUser;
+    document.querySelector("#profile-name").textContent = username;
+    document.querySelector("#profile-display-name").textContent = username;
+    if (syncFields) {
+      document.querySelector("#profile-username").value = username;
+      document.querySelector("#profile-email").value = profileData.email || "";
+    }
+    document.querySelector("#profile-title-count").textContent = String(
+      animeList.length,
+    );
+    const joined = profileData.joinedAt?.slice(0, 10);
+    document.querySelector("#profile-joined").textContent = joined
+      ? new Intl.DateTimeFormat(i18n.language, {
+          dateStyle: "long",
+          timeZone: "UTC",
+        }).format(new Date(`${joined}T00:00:00Z`))
+      : "—";
+    setAvatar(
+      document.querySelector("#profile-avatar"),
+      username,
+      profileData.avatarData,
+    );
+    setAvatar(
+      document.querySelector("#topbar-avatar"),
+      username,
+      profileData.avatarData,
+    );
+    setAvatar(
+      document.querySelector("#profile-large-avatar"),
+      username,
+      avatarDraft,
+    );
+    document.querySelector("#avatar-remove").hidden = !avatarDraft;
+  }
+
+  function showSection(section) {
+    const isProfile = section === "profile";
+    document.querySelector("#collection").hidden = isProfile;
+    document.querySelector("#profile-section").hidden = !isProfile;
+    document
+      .querySelector("#collection-nav")
+      .classList.toggle("active", !isProfile);
+    document
+      .querySelector("#profile-nav")
+      .classList.toggle("active", isProfile);
+    document
+      .querySelector("#collection-nav")
+      .toggleAttribute("aria-current", !isProfile);
+    document
+      .querySelector("#profile-nav")
+      .toggleAttribute("aria-current", isProfile);
+    const breadcrumb = document.querySelector("#breadcrumb-current");
+    breadcrumb.textContent = i18n.t(
+      isProfile ? "profile.title" : "collectionUpper",
+    );
   }
 
   authSwitch.addEventListener("click", () => {
     isRegistering = !isRegistering;
     authError.textContent = "";
     authForm.reset();
+    authPassword.type = "password";
+    authPasswordConfirm.type = "password";
     updateAuthMode();
   });
+
+  passwordToggle.addEventListener("click", () => {
+    authPassword.type = authPassword.type === "password" ? "text" : "password";
+    updatePasswordToggleLabel();
+    authPassword.focus();
+  });
+
+  if (passwordConfirmToggle) {
+    passwordConfirmToggle.addEventListener("click", () => {
+      authPasswordConfirm.type =
+        authPasswordConfirm.type === "password" ? "text" : "password";
+      updatePasswordToggleLabel();
+      authPasswordConfirm.focus();
+    });
+  }
 
   authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     authError.textContent = "";
     authSubmit.disabled = true;
     const data = new FormData(authForm);
+    const usernameInput = String(data.get("username") || "");
+    const passwordInput = String(data.get("password") || "");
+    const emailInput = String(data.get("email") || "").trim();
+    if (isRegistering && !/^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(emailInput)) {
+      authError.textContent = i18n.t("auth.err.gmail");
+      authSubmit.disabled = false;
+      return;
+    }
+    if (
+      isRegistering &&
+      passwordInput !== String(data.get("passwordConfirm") || "")
+    ) {
+      authError.textContent = i18n.t("auth.err.passwordMismatch");
+      authSubmit.disabled = false;
+      return;
+    }
     try {
       const username = isRegistering
-        ? await auth.register(
-            String(data.get("username") || ""),
-            String(data.get("password") || ""),
-          )
-        : await auth.login(
-            String(data.get("username") || ""),
-            String(data.get("password") || ""),
-          );
+        ? await auth.register(usernameInput, passwordInput, emailInput)
+        : await auth.login(usernameInput, passwordInput);
       await startApplication(username);
     } catch (error) {
       authError.textContent = error.message || i18n.t("auth.err.connection");
@@ -260,11 +413,110 @@
     auth.logout().finally(() => {
       activeUser = "";
       animeList = [];
+      profileData = null;
+      avatarDraft = null;
       showAuth();
       document.querySelector("#auth-form").reset();
       document.querySelector("#auth-error").textContent = "";
     });
   });
+
+  function openProfile(event) {
+    event?.preventDefault();
+    if (!profileData) return;
+    renderProfile({ syncFields: true });
+    showSection("profile");
+    document.querySelector("#profile-message").textContent = "";
+    document.querySelector("#profile-message").classList.remove("error");
+  }
+  document.querySelector("#profile-nav").addEventListener("click", openProfile);
+  document
+    .querySelector("#profile-trigger")
+    .addEventListener("click", openProfile);
+  document
+    .querySelector("#topbar-avatar")
+    .addEventListener("click", openProfile);
+  document
+    .querySelector("#collection-nav")
+    .addEventListener("click", (event) => {
+      event.preventDefault();
+      showSection("collection");
+    });
+  document
+    .querySelector("#profile-back")
+    .addEventListener("click", () => showSection("collection"));
+
+  document.querySelector("#avatar-choose").addEventListener("click", () => {
+    document.querySelector("#avatar-file").click();
+  });
+  document
+    .querySelector("#avatar-file")
+    .addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const message = document.querySelector("#profile-message");
+      if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
+        message.textContent = i18n.t("profile.imageError");
+        message.classList.add("error");
+        event.target.value = "";
+        return;
+      }
+      try {
+        const image = await createImageBitmap(file);
+        const scale = Math.min(1, 320 / Math.max(image.width, image.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas
+          .getContext("2d")
+          .drawImage(image, 0, 0, canvas.width, canvas.height);
+        image.close();
+        avatarDraft = canvas.toDataURL("image/jpeg", 0.8);
+        renderProfile();
+        message.textContent = "";
+        message.classList.remove("error");
+      } catch {
+        message.textContent = i18n.t("profile.imageError");
+        message.classList.add("error");
+      }
+      event.target.value = "";
+    });
+  document.querySelector("#avatar-remove").addEventListener("click", () => {
+    avatarDraft = null;
+    renderProfile();
+  });
+  document
+    .querySelector("#profile-form")
+    .addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const message = document.querySelector("#profile-message");
+      const submit = event.currentTarget.querySelector('[type="submit"]');
+      submit.disabled = true;
+      message.classList.remove("error");
+      message.textContent = i18n.t("profile.saving");
+      try {
+        profileData = await auth.updateProfile({
+          username: document.querySelector("#profile-username").value.trim(),
+          email: document.querySelector("#profile-email").value.trim() || null,
+          avatarData: avatarDraft,
+        });
+        avatarDraft = profileData.avatarData;
+        renderProfile({ syncFields: true });
+        message.textContent = i18n.t("profile.saved");
+      } catch (error) {
+        message.textContent =
+          error.code === "USERNAME_TAKEN"
+            ? i18n.t("profile.usernameTaken")
+            : error.code === "RATE_LIMITED"
+              ? i18n.t("profile.rateLimited")
+              : error.code === "INVALID_INPUT"
+                ? i18n.t("profile.usernameHint")
+                : i18n.t("profile.error");
+        message.classList.add("error");
+      } finally {
+        submit.disabled = false;
+      }
+    });
 
   document.querySelector("#open-form").addEventListener("click", openDialog);
   document.querySelector("#empty-add").addEventListener("click", openDialog);
@@ -296,20 +548,22 @@
     });
   });
 
-  document.querySelector("#notes-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const notes = document.querySelector("#notes-input").value;
-    try {
-      await storage.update(editingNoteId, { notes });
-      animeList = collection.updateNotes(animeList, editingNoteId, notes);
-      collectionError = "";
-      document.querySelector("#notes-dialog").close();
-      editingNoteId = null;
-      render();
-    } catch (error) {
-      document.querySelector("#notes-error").textContent = error.message;
-    }
-  });
+  document
+    .querySelector("#notes-form")
+    .addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const notes = document.querySelector("#notes-input").value;
+      try {
+        await storage.update(editingNoteId, { notes });
+        animeList = collection.updateNotes(animeList, editingNoteId, notes);
+        collectionError = "";
+        document.querySelector("#notes-dialog").close();
+        editingNoteId = null;
+        render();
+      } catch (error) {
+        document.querySelector("#notes-error").textContent = error.message;
+      }
+    });
   document
     .querySelector("#close-notes")
     .addEventListener("click", () =>
@@ -331,6 +585,14 @@
     updateDateDisplay();
     if (calendarDialog.open) renderCalendar();
     render();
+    if (profileData) {
+      renderProfile();
+      showSection(
+        document.querySelector("#profile-section").hidden
+          ? "collection"
+          : "profile",
+      );
+    }
     if (searchMessage.key)
       view.setSearchStatus(i18n.t(searchMessage.key, searchMessage.values));
     if (selectedAnime) {
@@ -522,42 +784,44 @@
       });
     });
 
-  document.querySelector("#anime-form").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    try {
-      if (!selectedAnime) throw new Error(i18n.t("chooseAnime"));
-      const status = String(data.get("status") || "watched");
-      if (status === "watched" && !validateRating())
-        throw new Error(i18n.t("ratingError"));
-      const [entry] = collection.add(animeList, {
-        title: selectedAnime.title,
-        rating:
-          status === "watched" ? String(data.get("rating") || "").trim() : "",
-        watchedAt: status === "watched" ? String(data.get("watchedAt") || "") : "",
-        malId: selectedAnime?.id,
-        imageUrl: selectedAnime?.imageUrl,
-        status,
-      });
-      const savedEntry = await storage.add(entry);
-      animeList = [savedEntry, ...animeList];
-      collectionError = "";
-      document.querySelector("#filter-input").value = "";
-      statusFilter = "all";
-      render();
-      document.querySelector("#anime-dialog").close();
-    } catch (error) {
-      document.querySelector("#form-error").textContent = error.message;
-    }
-  });
+  document
+    .querySelector("#anime-form")
+    .addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const data = new FormData(event.currentTarget);
+      try {
+        if (!selectedAnime) throw new Error(i18n.t("chooseAnime"));
+        const status = String(data.get("status") || "watched");
+        if (status === "watched" && !validateRating())
+          throw new Error(i18n.t("ratingError"));
+        const [entry] = collection.add(animeList, {
+          title: selectedAnime.title,
+          rating:
+            status === "watched" ? String(data.get("rating") || "").trim() : "",
+          watchedAt:
+            status === "watched" ? String(data.get("watchedAt") || "") : "",
+          malId: selectedAnime?.id,
+          imageUrl: selectedAnime?.imageUrl,
+          status,
+        });
+        const savedEntry = await storage.add(entry);
+        animeList = [savedEntry, ...animeList];
+        collectionError = "";
+        document.querySelector("#filter-input").value = "";
+        statusFilter = "all";
+        render();
+        document.querySelector("#anime-dialog").close();
+      } catch (error) {
+        document.querySelector("#form-error").textContent = error.message;
+      }
+    });
 
   updateAuthMode();
   auth
     .currentUser()
     .then((existingUser) => {
       if (existingUser) return startApplication(existingUser);
-      document.querySelector("#auth-username").value =
-        auth.suggestedUsername();
+      document.querySelector("#auth-username").value = auth.suggestedUsername();
       showAuth();
     })
     .catch((error) => {

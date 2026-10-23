@@ -20,6 +20,17 @@ window.AnimeTracker = window.AnimeTracker || {};
       }
     }
   `;
+  const FEATURED_QUERY = `
+    query FeaturedAnime {
+      Page(page: 1, perPage: 5) {
+        media(type: ANIME, sort: POPULARITY_DESC, isAdult: false) {
+          title { english romaji }
+          bannerImage
+          coverImage { extraLarge large }
+        }
+      }
+    }
+  `;
 
   const scripts = [
     /\p{Script=Cyrillic}/u,
@@ -117,5 +128,34 @@ window.AnimeTracker = window.AnimeTracker || {};
     }
   }
 
-  window.AnimeTracker.animeApi = { search };
+  async function featured() {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 5_000);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: FEATURED_QUERY }),
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Featured titles unavailable.");
+      const payload = await response.json();
+      if (payload.errors?.length)
+        throw new Error("Featured titles unavailable.");
+      return (payload.data?.Page?.media || [])
+        .map((anime) => ({
+          title: anime.title?.english || anime.title?.romaji || "Anime",
+          imageUrl:
+            anime.bannerImage ||
+            anime.coverImage?.extraLarge ||
+            anime.coverImage?.large ||
+            "",
+        }))
+        .filter((anime) => anime.imageUrl);
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  window.AnimeTracker.animeApi = { search, featured };
 })();

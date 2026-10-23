@@ -13,8 +13,8 @@ from ...core.security import (
     password_hasher,
     token_digest,
 )
-from ...models import LoginSession, User
-from ...schemas import Credentials, SessionResponse
+from ...models import AnimeEntry, LoginSession, User
+from ...schemas import Credentials, ProfileUpdate, SessionResponse
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -24,10 +24,13 @@ def register(credentials: Credentials, db: Session = Depends(get_db)):
     normalized = credentials.username.casefold()
     if db.scalar(select(User.id).where(User.username_normalized == normalized)):
         raise HTTPException(status_code=409, detail={"code": "USERNAME_TAKEN"})
+    if credentials.email and db.scalar(select(User.id).where(User.email == credentials.email)):
+        raise HTTPException(status_code=409, detail={"code": "EMAIL_TAKEN"})
     user = User(
         username=credentials.username,
         username_normalized=normalized,
         password_hash=password_hasher.hash(credentials.password),
+        email=credentials.email,
     )
     db.add(user)
     try:
@@ -71,5 +74,50 @@ def logout(
 
 
 @router.get("/me")
-def me(user: User = Depends(current_user)):
-    return {"username": user.username}
+def me(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return {
+        "username": user.username,
+        "email": user.email,
+        "avatarData": user.avatar_data,
+        "joinedAt": user.joined_at.isoformat(),
+        "titleCount": db.query(AnimeEntry).filter(AnimeEntry.user_id == user.id).count(),
+    }
+
+
+@router.patch("/profile")
+def update_profile(
+    changes: ProfileUpdate,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    if "username" in changes.model_fields_set:
+        if not changes.username:
+            raise HTTPException(status_code=422, detail={"code": "INVALID_USERNAME"})
+        normalized = changes.username.casefold()
+        existing_user_id = db.scalar(
+            select(User.id).where(
+                User.username_normalized == normalized,
+                User.id != user.id,
+            )
+        )
+        if existing_user_id is not None:
+            raise HTTPException(status_code=409, detail={"code": "USERNAME_TAKEN"})
+        user.username = changes.username
+        user.username_normalized = normalized
+    if "email" in changes.model_fields_set:
+        user.email = changes.email
+    if "avatarData" in changes.model_fields_set:
+        user.avatar_data = changes.avatarData
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail={"code": "USERNAME_TAKEN"}) from error
+    db.refresh(user)
+    return {
+        "username": user.username,
+        "email": user.email,
+        "avatarData": user.avatar_data,
+        "joinedAt": user.joined_at.isoformat(),
+        "titleCount": db.query(AnimeEntry).filter(AnimeEntry.user_id == user.id).count(),
+    }

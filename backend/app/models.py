@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
-from sqlalchemy import Date, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .core.database import Base
@@ -15,6 +15,11 @@ class User(Base):
         String(30), unique=True, index=True, nullable=False
     )
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    email: Mapped[str | None] = mapped_column(String(254), nullable=True)
+    avatar_data: Mapped[str | None] = mapped_column(Text, nullable=True)
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+    )
     entries: Mapped[list["AnimeEntry"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

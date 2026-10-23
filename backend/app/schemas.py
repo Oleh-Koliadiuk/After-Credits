@@ -1,4 +1,5 @@
 from datetime import date
+import re
 from typing import Literal
 from uuid import UUID
 
@@ -10,6 +11,17 @@ Status = Literal["watched", "watching", "planned"]
 class Credentials(BaseModel):
     username: str = Field(min_length=3, max_length=30)
     password: str = Field(min_length=8, max_length=128)
+    email: str | None = Field(default=None, max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def validate_registration_email(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip().lower()
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,63}@gmail\.com", value):
+            raise ValueError("INVALID_EMAIL")
+        return value
 
     @field_validator("username")
     @classmethod
@@ -100,3 +112,42 @@ class SessionResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     username: str
+
+
+class ProfileUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    username: str | None = Field(default=None, min_length=3, max_length=30)
+    email: str | None = Field(default=None, max_length=254)
+    avatarData: str | None = Field(default=None, max_length=350_000)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        if not 3 <= len(value) <= 30 or not value.isascii() or not all(
+            char.isalnum() or char in "_.-" for char in value
+        ):
+            raise ValueError("INVALID_USERNAME")
+        return value
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
+        value = value.strip().lower()
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
+            raise ValueError("INVALID_EMAIL")
+        return value
+
+    @field_validator("avatarData")
+    @classmethod
+    def validate_avatar(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(
+            r"data:image/jpeg;base64,[A-Za-z0-9+/]+={0,2}", value
+        ):
+            raise ValueError("INVALID_AVATAR")
+        return value

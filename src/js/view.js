@@ -18,7 +18,6 @@ window.AnimeTracker = window.AnimeTracker || {};
     art.className = "card-art";
     art.setAttribute("aria-hidden", "true");
     const artMark = document.createElement("span");
-    artMark.textContent = "✳";
     art.append(artMark);
     if (item.imageUrl) {
       const poster = document.createElement("img");

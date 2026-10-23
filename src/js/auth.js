@@ -75,32 +75,40 @@ window.AnimeTracker = window.AnimeTracker || {};
     const accounts = readLegacyAccounts();
     delete accounts[legacy.normalized];
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    if (
-      localStorage.getItem(LEGACY_SESSION_KEY) === legacy.normalized
-    ) {
+    if (localStorage.getItem(LEGACY_SESSION_KEY) === legacy.normalized) {
       localStorage.removeItem(LEGACY_SESSION_KEY);
     }
   }
 
   function localizedError(error) {
+    if (error.code === "AUTH_INVALID" && error.remainingAttempts !== null) {
+      return new Error(
+        i18n.t("auth.err.passwordAttempts", {
+          count: error.remainingAttempts,
+        }),
+      );
+    }
     const keys = {
       INVALID_USERNAME: "auth.err.username",
       INVALID_INPUT: "auth.err.input",
+      INVALID_EMAIL: "auth.err.gmail",
+      EMAIL_TAKEN: "auth.err.emailTaken",
       PASSWORD_TOO_SHORT: "auth.err.passwordLength",
       USERNAME_TAKEN: "auth.err.exists",
       AUTH_INVALID: "auth.err.password",
       API_UNAVAILABLE: "auth.err.connection",
+      RATE_LIMITED: "auth.err.rateLimited",
       IMPORT_CONFLICT: "auth.err.migration",
     };
     return new Error(i18n.t(keys[error.code] || "auth.err.connection"));
   }
 
-  async function register(username, password) {
+  async function register(username, password, email) {
     try {
       const response = await api.request("/auth/register", {
         method: "POST",
         auth: false,
-        body: { username, password },
+        body: { username, password, email },
       });
       api.setToken(response.access_token);
       const legacy = await readMatchingLegacyAccount(username, password);
@@ -169,9 +177,19 @@ window.AnimeTracker = window.AnimeTracker || {};
     }
   }
 
+  async function getProfile() {
+    return api.request("/auth/me");
+  }
+
+  async function updateProfile(changes) {
+    return api.request("/auth/profile", { method: "PATCH", body: changes });
+  }
+
   function suggestedUsername() {
     const normalized = localStorage.getItem(LEGACY_SESSION_KEY);
-    return normalized ? readLegacyAccounts()[normalized]?.username || normalized : "";
+    return normalized
+      ? readLegacyAccounts()[normalized]?.username || normalized
+      : "";
   }
 
   async function logout() {
@@ -188,6 +206,8 @@ window.AnimeTracker = window.AnimeTracker || {};
     register,
     login,
     currentUser,
+    getProfile,
+    updateProfile,
     suggestedUsername,
     logout,
   };

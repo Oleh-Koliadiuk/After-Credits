@@ -46,7 +46,8 @@
   }
   .sidebar > .nav-label,
   .sidebar nav,
-  .sidebar-bottom {
+  .sidebar-bottom,
+  .sidebar-footer {
     display: none;
   }
   .main-content {
@@ -91,13 +92,12 @@
   }
 }
 @media (max-width: 480px) {
-  .auth-brand {
-    top: 19px;
-    left: 18px;
-  }
-  .auth-language-control {
+  .auth-header {
     top: 19px;
     right: 18px;
+    left: 18px;
+    gap: 12px;
+    padding-bottom: 10px;
   }
   .auth-card {
     padding: 25px 21px;
@@ -254,7 +254,7 @@
     background: transparent;
   }
   .logout-button:hover {
-    border-color: #414245;
-    color: #a7aea6;
+    border-color: var(--accent);
+    color: #ffffff;
   }
 }

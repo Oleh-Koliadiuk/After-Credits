@@ -44,33 +44,21 @@
   </head>
   <body>
     <main class="auth-screen" id="auth-screen">
-      <a
-        class="brand auth-brand"
-        href="#home"
-        aria-label="Anime Tracker home"
-        data-i18n-aria-label="brandHome"
-      >
-        <span class="brand-mark" aria-hidden="true">a</span>
-        <span>aftercredits<span class="brand-period">.</span></span>
-      </a>
-      <section class="auth-card" aria-labelledby="auth-title">
-        <div class="eyebrow">
-          <span class="eyebrow-line"></span
-          ><span data-i18n="archiveLabel">YOUR PERSONAL ARCHIVE</span>
-        </div>
-        <h1 id="auth-title">
-          <span data-i18n="auth.welcome">Welcome back</span
-          ><span class="heading-period">.</span>
-        </h1>
-        <p class="auth-description" id="auth-description">
-          <span data-i18n="auth.signInDescription"
-            >Sign in to open your anime collection.</span
-          >
-        </p>
+      <header class="auth-header">
+        <a
+          class="brand auth-brand"
+          href="#home"
+          aria-label="Anime Tracker home"
+          data-i18n-aria-label="brandHome"
+        >
+          <span class="brand-mark" aria-hidden="true">a</span>
+          <span>aftercredits<span class="brand-period">.</span></span>
+        </a>
         <label class="language-control auth-language-control">
           <span class="sr-only" data-i18n="languageLabel"
             >Interface language</span
           >
+          <span class="auth-language-icon" aria-hidden="true"></span>
           <select
             class="language-select"
             aria-label="Interface language"
@@ -81,54 +69,205 @@
             <option value="ru">Русский</option>
           </select>
         </label>
-        <form id="auth-form">
-          <label
-            class="field-label"
-            for="auth-username"
-            data-i18n="auth.username"
-            >USERNAME</label
+      </header>
+      <div class="auth-layout">
+        <aside class="auth-showcase">
+          <div class="auth-showcase-banner">
+            <img
+              class="auth-banner-image"
+              id="auth-banner-image"
+              alt=""
+              src="assets/banners/red_warm_anime.png "
+              data-loaded="true"
+            />
+            <div class="auth-banner-shade"></div>
+            <div class="auth-showcase-copy">
+              <p class="auth-showcase-kicker" data-i18n="auth.visualKicker">
+                YOUR ANIME ARCHIVE
+              </p>
+              <h2 data-i18n="auth.visualTitle">Your anime, in one place</h2>
+            </div>
+          </div>
+        </aside>
+        <section class="auth-card" aria-labelledby="auth-title">
+          <h1 id="auth-title">
+            <span data-i18n="auth.welcome">Welcome back</span>
+          </h1>
+          <p class="auth-description" id="auth-description">
+            <span data-i18n="auth.signInDescription"
+              >Sign in to open your anime collection.</span
+            >
+          </p>
+          <ul
+            class="auth-benefits"
+            aria-label="Collection features"
+            data-i18n-aria-label="auth.benefitsLabel"
           >
-          <input
-            class="text-input"
-            id="auth-username"
-            name="username"
-            pattern="[A-Za-z0-9_.-]+"
-            minlength="3"
-            maxlength="30"
-            autocomplete="username"
-            required
-          />
-          <label
-            class="field-label auth-password-label"
-            for="auth-password"
-            data-i18n="auth.password"
-            >PASSWORD</label
-          >
-          <input
-            class="text-input"
-            id="auth-password"
-            name="password"
-            type="password"
-            minlength="8"
-            maxlength="128"
-            autocomplete="current-password"
-            required
-          />
-          <p class="form-error" id="auth-error" role="alert"></p>
-          <button class="add-button auth-submit" id="auth-submit" type="submit">
-            <span data-i18n="auth.signIn">Sign in</span>
-            <span aria-hidden="true">↗</span>
-          </button>
-        </form>
-        <p class="auth-switch-copy">
-          <span id="auth-switch-prompt" data-i18n="auth.newHere"
-            >New here?</span
-          >
-          <button class="auth-switch" id="auth-switch" type="button">
-            <span data-i18n="auth.createLocal">Create an account</span>
-          </button>
-        </p>
-      </section>
+            <li>
+              <span
+                class="benefit-mark benefit-mark-list"
+                aria-hidden="true"
+              ></span>
+              <span
+                ><strong data-i18n="auth.benefitTrackTitle"
+                  >Keep your list together</strong
+                ><small data-i18n="auth.benefitTrackCopy"
+                  >Watched, in progress, and planned titles</small
+                ></span
+              >
+            </li>
+            <li>
+              <span
+                class="benefit-mark benefit-mark-rate"
+                aria-hidden="true"
+              ></span>
+              <span
+                ><strong data-i18n="auth.benefitRateTitle"
+                  >Rate what you watch</strong
+                ><small data-i18n="auth.benefitRateCopy"
+                  >Your scores, saved with each title</small
+                ></span
+              >
+            </li>
+            <li>
+              <span
+                class="benefit-mark benefit-mark-note"
+                aria-hidden="true"
+              ></span>
+              <span
+                ><strong data-i18n="auth.benefitNoteTitle"
+                  >Leave yourself a note</strong
+                ><small data-i18n="auth.benefitNoteCopy"
+                  >Keep your thoughts close to the anime</small
+                ></span
+              >
+            </li>
+          </ul>
+          <form id="auth-form">
+            <label
+              class="field-label"
+              for="auth-username"
+              data-i18n="auth.username"
+              >USERNAME</label
+            >
+            <input
+              class="text-input"
+              id="auth-username"
+              name="username"
+              pattern="[A-Za-z0-9_.-]+"
+              minlength="3"
+              maxlength="30"
+              autocomplete="username"
+              required
+            />
+            <div class="auth-register-field" id="auth-email-field" hidden>
+              <label class="field-label" for="auth-email" data-i18n="auth.email"
+                >GMAIL ADDRESS</label
+              >
+              <input
+                class="text-input"
+                id="auth-email"
+                name="email"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                maxlength="254"
+                pattern="[A-Za-z0-9._%+-]+@gmail[.]com"
+                data-i18n-placeholder="auth.emailPlaceholder"
+                disabled
+              />
+            </div>
+            <label
+              class="field-label auth-password-label"
+              for="auth-password"
+              data-i18n="auth.password"
+              >PASSWORD</label
+            >
+            <div class="password-field">
+              <input
+                class="text-input"
+                id="auth-password"
+                name="password"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="current-password"
+                required
+              />
+              <button
+                class="password-toggle"
+                id="password-toggle"
+                type="button"
+                aria-label="Show password"
+                data-i18n-aria-label="auth.showPassword"
+                data-i18n-title="auth.showPassword"
+                aria-pressed="false"
+              >
+                <span
+                  class="password-visibility-icon"
+                  aria-hidden="true"
+                ></span>
+              </button>
+            </div>
+            <div
+              class="auth-register-field"
+              id="auth-password-confirm-field"
+              hidden
+            >
+              <label
+                class="field-label auth-password-label"
+                for="auth-password-confirm"
+                data-i18n="auth.confirmPassword"
+                >CONFIRM PASSWORD</label
+              >
+              <div class="password-field">
+                <input
+                  class="text-input"
+                  id="auth-password-confirm"
+                  name="passwordConfirm"
+                  type="password"
+                  minlength="8"
+                  maxlength="128"
+                  autocomplete="new-password"
+                  data-i18n-placeholder="auth.confirmPasswordPlaceholder"
+                  disabled
+                />
+                <button
+                  class="password-toggle"
+                  id="password-confirm-toggle"
+                  type="button"
+                  aria-label="Show password"
+                  data-i18n-aria-label="auth.showPassword"
+                  data-i18n-title="auth.showPassword"
+                  aria-pressed="false"
+                >
+                  <span
+                    class="password-visibility-icon"
+                    aria-hidden="true"
+                  ></span>
+                </button>
+              </div>
+            </div>
+            <p class="form-error" id="auth-error" role="alert"></p>
+            <button
+              class="add-button auth-submit"
+              id="auth-submit"
+              type="submit"
+            >
+              <span data-i18n="auth.signIn">Sign in</span>
+              <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <p class="auth-switch-copy">
+            <span id="auth-switch-prompt" data-i18n="auth.newHere"
+              >New here?</span
+            >
+            <button class="auth-switch" id="auth-switch" type="button">
+              <span data-i18n="auth.createLocal">Create an account</span>
+            </button>
+          </p>
+        </section>
+      </div>
     </main>
 
     <div class="app-shell" id="app-shell" hidden>
@@ -151,26 +290,45 @@
           id="faq-open-mobile"
           type="button"
         >
-          <span aria-hidden="true">?</span><span data-i18n="faq">FAQ</span>
+          <span class="faq-mark" aria-hidden="true"></span
+          ><span data-i18n="faq">FAQ</span>
         </button>
         <div class="nav-label" data-i18n="library">LIBRARY</div>
         <nav>
-          <a class="nav-item active" href="#collection" aria-current="page">
-            <span class="nav-icon" aria-hidden="true">▤</span>
+          <a
+            class="nav-item active"
+            href="#collection"
+            id="collection-nav"
+            aria-current="page"
+          >
+            <span class="nav-icon nav-icon-library" aria-hidden="true"></span>
             <span data-i18n="collection">My collection</span>
             <span class="nav-count" id="nav-count">0</span>
           </a>
+          <a class="nav-item" href="#profile" id="profile-nav">
+            <span class="nav-icon nav-icon-account" aria-hidden="true"></span>
+            <span data-i18n="profile.nav">Account</span>
+          </a>
         </nav>
-        <button class="faq-link" id="faq-open" type="button">
-          <span aria-hidden="true">?</span><span data-i18n="faq">FAQ</span>
-        </button>
-        <div class="sidebar-bottom">
-          <div class="profile-avatar" id="profile-avatar" aria-hidden="true">
-            A
-          </div>
-          <div class="profile-copy">
-            <strong id="profile-name">Profile</strong>
-          </div>
+        <div class="sidebar-footer">
+          <button class="faq-link" id="faq-open" type="button">
+            <span class="faq-mark" aria-hidden="true"></span
+            ><span data-i18n="faq">FAQ</span>
+          </button>
+          <a
+            class="sidebar-bottom profile-trigger"
+            id="profile-trigger"
+            href="#profile"
+            aria-label="Open account"
+            data-i18n-aria-label="profile.open"
+          >
+            <div class="profile-avatar" id="profile-avatar" aria-hidden="true">
+              A
+            </div>
+            <div class="profile-copy">
+              <strong id="profile-name">Profile</strong>
+            </div>
+          </a>
         </div>
       </aside>
 
@@ -182,7 +340,9 @@
             data-i18n-aria-label="breadcrumb"
           >
             <span data-i18n="library">LIBRARY</span> <span>/</span>
-            <strong data-i18n="collectionUpper">MY COLLECTION</strong>
+            <strong id="breadcrumb-current" data-i18n="collectionUpper"
+              >MY COLLECTION</strong
+            >
           </div>
           <div class="topbar-right">
             <label class="language-control">
@@ -202,9 +362,15 @@
             <button class="logout-button" id="logout-button" type="button">
               <span data-i18n="signOut">Sign out</span>
             </button>
-            <span class="topbar-avatar" id="topbar-avatar" aria-hidden="true"
-              >A</span
+            <button
+              class="topbar-avatar profile-trigger"
+              id="topbar-avatar"
+              type="button"
+              aria-label="Open account"
+              data-i18n-aria-label="profile.open"
             >
+              A
+            </button>
           </div>
         </header>
 
@@ -329,12 +495,12 @@
           <div class="anime-grid" id="anime-grid" aria-live="polite"></div>
           <div class="empty-state" id="empty-state">
             <div class="empty-art" aria-hidden="true">
-              <span>✳</span><i></i><b></b>
+              <span></span><i></i><b></b>
             </div>
             <p class="empty-kicker" id="empty-kicker" data-i18n="newChapter">
               COLLECTION
             </p>
-            <h3 id="empty-title" data-i18n="emptyTitle">No anime yet.</h3>
+            <h3 id="empty-title" data-i18n="emptyTitle">No anime yet</h3>
             <p id="empty-description" data-i18n="emptyDescription">
               Add an anime to your list.
             </p>
@@ -345,6 +511,113 @@
               <span aria-hidden="true">↗</span>
             </button>
           </div>
+        </section>
+        <section id="profile-section" class="profile-section" hidden>
+          <div class="page-heading">
+            <div>
+              <div class="eyebrow">
+                <span class="eyebrow-line"></span
+                ><span data-i18n="profile.eyebrow">ACCOUNT</span>
+              </div>
+              <h1 data-i18n="profile.title">Your account</h1>
+              <p class="subtitle" data-i18n="profile.description">
+                Account details and preferences.
+              </p>
+            </div>
+            <button
+              class="cancel-button"
+              id="profile-back"
+              type="button"
+              data-i18n="profile.back"
+            >
+              Back to collection
+            </button>
+          </div>
+          <form class="profile-card" id="profile-form">
+            <div class="profile-card-heading">
+              <div
+                class="profile-large-avatar"
+                id="profile-large-avatar"
+                aria-hidden="true"
+              >
+                A
+              </div>
+              <div>
+                <h2 id="profile-display-name">Username</h2>
+                <p data-i18n="profile.member">Account member</p>
+              </div>
+              <div class="profile-actions">
+                <input id="avatar-file" type="file" accept="image/*" hidden />
+                <button
+                  class="cancel-button"
+                  id="avatar-choose"
+                  type="button"
+                  data-i18n="profile.changeAvatar"
+                >
+                  Change avatar
+                </button>
+                <button
+                  class="cancel-button"
+                  id="avatar-remove"
+                  type="button"
+                  data-i18n="profile.removeAvatar"
+                  hidden
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+            <div class="profile-fields">
+              <label class="profile-field" for="profile-username">
+                <span class="field-label" data-i18n="profile.username"
+                  >USERNAME</span
+                ><input
+                  class="text-input"
+                  id="profile-username"
+                  type="text"
+                  minlength="3"
+                  maxlength="30"
+                  pattern="[A-Za-z0-9_.-]+"
+                  autocomplete="username"
+                  required
+                  data-i18n-title="profile.usernameHint"
+                />
+              </label>
+              <div class="profile-field">
+                <span class="field-label" data-i18n="profile.joined"
+                  >JOINED</span
+                ><strong id="profile-joined">—</strong>
+              </div>
+              <div class="profile-field">
+                <span class="field-label" data-i18n="profile.titles"
+                  >ANIME IN COLLECTION</span
+                ><strong id="profile-title-count">0</strong>
+              </div>
+              <label class="profile-email-field"
+                ><span class="field-label" data-i18n="profile.email">EMAIL</span
+                ><input
+                  class="text-input"
+                  id="profile-email"
+                  type="email"
+                  maxlength="254"
+                  autocomplete="email"
+                  placeholder="name@example.com"
+                  data-i18n-placeholder="profile.emailPlaceholder"
+              /></label>
+            </div>
+            <p
+              class="profile-message"
+              id="profile-message"
+              role="status"
+              aria-live="polite"
+            ></p>
+            <div class="profile-footer">
+              <button class="add-button" type="submit">
+                <span data-i18n="profile.save">Save changes</span
+                ><span aria-hidden="true">↗</span>
+              </button>
+            </div>
+          </form>
         </section>
       </main>
     </div>
@@ -385,8 +658,7 @@
               ><span data-i18n="findNext">FIND YOUR NEXT ENTRY</span>
             </div>
             <h2 id="dialog-title">
-              <span data-i18n="findAnime">Find an anime</span
-              ><span class="heading-period">.</span>
+              <span data-i18n="findAnime">Find an anime</span>
             </h2>
             <p>
               <span data-i18n="searchDescription"
@@ -428,7 +700,7 @@
             aria-live="polite"
           ></p>
           <div class="search-start" id="search-start">
-            <span aria-hidden="true">✳</span>
+            <span aria-hidden="true"></span>
             <p data-i18n="searchStart">
               Start typing to explore matching titles.
             </p>
